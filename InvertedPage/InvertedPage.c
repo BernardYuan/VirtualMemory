@@ -1,8 +1,10 @@
-include <stdio.h>
-typedef unsigned long word;
+#include <stdio.h>
+
+typedef unsigned int word;
 typedef unsigned short half_word;
 typedef unsigned char byte;
 #define MAXPAGE 16
+#define MEM_SIZE 65536
 #define PAGE_SIZE 4096
 
 typedef struct {
@@ -10,8 +12,8 @@ typedef struct {
     int used;
 } pageInfo;
 
-byte page[4096];
-byte mem[65536];    // 512 bytes/block, 8 blocks/cluster, 16 clusters, 16 pages
+byte page[PAGE_SIZE];
+byte mem[MEM_SIZE];    // 512 bytes/block, 8 blocks/cluster, 16 clusters, 16 pages
 byte tmpVM[262144]; // used to store virtual memory when modifying
 pageInfo pages[MAXPAGE];
 
@@ -30,7 +32,7 @@ void init() {
 
 byte lb(word addr) {
     int i;
-    int minUse = 65535, minPage = 17;
+    int minUse = MEM_SIZE - 1, minPage = 17;
     word pageID = addr / PAGE_SIZE;
     word offSet = addr % PAGE_SIZE;
 
@@ -38,7 +40,7 @@ byte lb(word addr) {
         if (pages[i].used < minUse) {
             minUse = pages[i].used;
             minPage = i;
-        } 
+        }
         if (pages[i].hdIdx == pageID) {
             return mem[i * PAGE_SIZE + offSet];
         }
@@ -77,7 +79,7 @@ void sb(word addr, byte val) {
         if (pages[i].used < minUse) {
             minUse = pages[i].used;
             minPage = i;
-        } 
+        }
         if (pages[i].hdIdx == pageID) {
             mem[i * PAGE_SIZE + offSet] = val;
             return;
@@ -110,8 +112,7 @@ void sw(word addr, word val) {
     sh(addr + 2, (half_word)(val >> 16));
 }
 
-
-int main() {
+int main(void) {
     init();
     sw(16000,1);
     sb(16004,2);
